@@ -2,6 +2,7 @@
 # python encode_faces.py --dataset dataset --encodings encodings.pickle
 
 # import the necessary packages
+# import the necessary packages
 import sys
 import dlib
 from imutils import paths
@@ -63,7 +64,7 @@ for (i, imagePath) in enumerate(imagePaths):
 # dump the facial encodings + names to disk
 print("[INFO] serializing encodings...")
 data = {"encodings": knownEncodings, "names": knownNames}
-f = open(args["encodings"], "wb")
+f = open(args["encodings"], "ab")
 f.write(pickle.dumps(data))
 f.close()
 
