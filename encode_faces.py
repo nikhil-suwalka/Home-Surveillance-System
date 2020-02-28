@@ -65,7 +65,8 @@ for (i, imagePath) in enumerate(imagePaths):
 # dump the facial encodings + names to disk
 print("[INFO] serializing encodings...")
 data = {"encodings": knownEncodings, "names": knownNames}
-oldData = pickle.loads(open(args["encodings"], "rb").read())
+fr = open(args["encodings"], "rb")
+oldData = pickle.loads(fr.read())
 print(data,"pehle")
 print(oldData,"pehle")
 for d in data:
@@ -74,11 +75,10 @@ for d in data:
 for d in oldData:
 	if d not in data:
 		data[d]=oldData[d]
-print(data)
-f = open(args["encodings"], "ab")
+fr.close()
+f = open(args["encodings"], "wb")
 f.write(pickle.dumps(data))
 f.close()
-oldData.clos
 print("Writing image path into txt file..")
 txtFile = open("images.txt",'a')
 files = ""
