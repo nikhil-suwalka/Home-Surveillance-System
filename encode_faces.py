@@ -11,6 +11,7 @@ import argparse
 import pickle
 import cv2
 import os
+
 # construct the argument parser and parse the arguments
 # ap = argparse.ArgumentParser()
 # ap.add_argument("-i", "--dataset", required=True,
@@ -64,10 +65,20 @@ for (i, imagePath) in enumerate(imagePaths):
 # dump the facial encodings + names to disk
 print("[INFO] serializing encodings...")
 data = {"encodings": knownEncodings, "names": knownNames}
+oldData = pickle.loads(open(args["encodings"], "rb").read())
+print(data,"pehle")
+print(oldData,"pehle")
+for d in data:
+	if d in oldData:
+		data[d]+=oldData[d]
+for d in oldData:
+	if d not in data:
+		data[d]=oldData[d]
+print(data)
 f = open(args["encodings"], "ab")
 f.write(pickle.dumps(data))
 f.close()
-
+oldData.clos
 print("Writing image path into txt file..")
 txtFile = open("images.txt",'a')
 files = ""
