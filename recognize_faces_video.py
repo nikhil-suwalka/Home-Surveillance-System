@@ -24,8 +24,6 @@ import cv2
 # args = vars(ap.parse_args())
 args = {'encodings': 'encodings.pickle', 'output': None, 'display': 1, 'detection_method': 'cnn'}
 
-
-
 # load the known faces and embeddings
 print("[INFO] loading encodings...")
 data = pickle.loads(open(args["encodings"], "rb").read())
@@ -39,93 +37,93 @@ time.sleep(2.0)
 
 # loop over frames from the video file stream
 while True:
-	# grab the frame from the threaded video stream
-	frame = vs.read()
-	
-	# convert the input frame from BGR to RGB then resize it to have
-	# a width of 750px (to speedup processing)
-	rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-	rgb = imutils.resize(frame, width=750)
-	r = frame.shape[1] / float(rgb.shape[1])
+    # grab the frame from the threaded video stream
+    frame = vs.read()
 
-	# detect the (x, y)-coordinates of the bounding boxes
-	# corresponding to each face in the input frame, then compute
-	# the facial embeddings for each face
-	boxes = face_recognition.face_locations(rgb,
-		model=args["detection_method"])
-	encodings = face_recognition.face_encodings(rgb, boxes)
-	names = []
+    # convert the input frame from BGR to RGB then resize it to have
+    # a width of 750px (to speedup processing)
+    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    rgb = imutils.resize(frame, width=750)
+    r = frame.shape[1] / float(rgb.shape[1])
 
-	# loop over the facial embeddings
-	for encoding in encodings:
-		# attempt to match each face in the input image to our known
-		# encodings
-		matches = face_recognition.compare_faces(data["encodings"],
-			encoding)
-		name = "Unknown"
+    # detect the (x, y)-coordinates of the bounding boxes
+    # corresponding to each face in the input frame, then compute
+    # the facial embeddings for each face
+    boxes = face_recognition.face_locations(rgb,
+                                            model=args["detection_method"])
+    encodings = face_recognition.face_encodings(rgb, boxes)
+    names = []
 
-		# check to see if we have found a match
-		if True in matches:
-			# find the indexes of all matched faces then initialize a
-			# dictionary to count the total number of times each face
-			# was matched
-			matchedIdxs = [i for (i, b) in enumerate(matches) if b]
-			counts = {}
+    # loop over the facial embeddings
+    for encoding in encodings:
+        # attempt to match each face in the input image to our known
+        # encodings
+        matches = face_recognition.compare_faces(data["encodings"],
+                                                 encoding)
+        name = "Unknown"
 
-			# loop over the matched indexes and maintain a count for
-			# each recognized face face
-			for i in matchedIdxs:
-				name = data["names"][i]
-				counts[name] = counts.get(name, 0) + 1
-			print(counts[max(counts, key=counts.get)])
-			# determine the recognized face with the largest number
-			# of votes (note: in the event of an unlikely tie Python
-			# will select first entry in the dictionary)
-			threshold = round(data["names"].count(name)*0.70)
-			if(counts[max(counts, key=counts.get)]>=threshold):
-				name = max(counts, key=counts.get)
-			else:
-				name="Unknown"
-		
-		# update the list of names
-		names.append(name)
+        # check to see if we have found a match
+        if True in matches:
+            # find the indexes of all matched faces then initialize a
+            # dictionary to count the total number of times each face
+            # was matched
+            matchedIdxs = [i for (i, b) in enumerate(matches) if b]
+            counts = {}
 
-	# loop over the recognized faces
-	for ((top, right, bottom, left), name) in zip(boxes, names):
-		# rescale the face coordinates
-		top = int(top * r)
-		right = int(right * r)
-		bottom = int(bottom * r)
-		left = int(left * r)
+            # loop over the matched indexes and maintain a count for
+            # each recognized face face
+            for i in matchedIdxs:
+                name = data["names"][i]
+                counts[name] = counts.get(name, 0) + 1
+            print(counts[max(counts, key=counts.get)])
+            # determine the recognized face with the largest number
+            # of votes (note: in the event of an unlikely tie Python
+            # will select first entry in the dictionary)
+            threshold = round(data["names"].count(name) * 0.60)
+            if (counts[max(counts, key=counts.get)] >= threshold):
+                name = max(counts, key=counts.get)
+            else:
+                name = "Unknown"
 
-		# draw the predicted face name on the image
-		cv2.rectangle(frame, (left, top), (right, bottom),
-			(0, 255, 0), 2)
-		y = top - 15 if top - 15 > 15 else top + 15
-		cv2.putText(frame, name, (left, y), cv2.FONT_HERSHEY_SIMPLEX,
-			0.75, (0, 255, 0), 2)
+        # update the list of names
+        names.append(name)
 
-	# if the video writer is None *AND* we are supposed to write
-	# the output video to disk initialize the writer
-	if writer is None and args["output"] is not None:
-		fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-		writer = cv2.VideoWriter(args["output"], fourcc, 20,
-			(frame.shape[1], frame.shape[0]), True)
+    # loop over the recognized faces
+    for ((top, right, bottom, left), name) in zip(boxes, names):
+        # rescale the face coordinates
+        top = int(top * r)
+        right = int(right * r)
+        bottom = int(bottom * r)
+        left = int(left * r)
 
-	# if the writer is not None, write the frame with recognized
-	# faces t odisk
-	if writer is not None:
-		writer.write(frame)
+        # draw the predicted face name on the image
+        cv2.rectangle(frame, (left, top), (right, bottom),
+                      (0, 255, 0), 2)
+        y = top - 15 if top - 15 > 15 else top + 15
+        cv2.putText(frame, name, (left, y), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.75, (0, 255, 0), 2)
 
-	# check to see if we are supposed to display the output frame to
-	# the screen
-	if args["display"] > 0:
-		cv2.imshow("Frame", frame)
-		key = cv2.waitKey(1) & 0xFF
+    # if the video writer is None *AND* we are supposed to write
+    # the output video to disk initialize the writer
+    if writer is None and args["output"] is not None:
+        fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+        writer = cv2.VideoWriter(args["output"], fourcc, 20,
+                                 (frame.shape[1], frame.shape[0]), True)
 
-		# if the `q` key was pressed, break from the loop
-		if key == ord("q"):
-			break
+    # if the writer is not None, write the frame with recognized
+    # faces t odisk
+    if writer is not None:
+        writer.write(frame)
+
+    # check to see if we are supposed to display the output frame to
+    # the screen
+    if args["display"] > 0:
+        cv2.imshow("Frame", frame)
+        key = cv2.waitKey(1) & 0xFF
+
+        # if the `q` key was pressed, break from the loop
+        if key == ord("q"):
+            break
 
 # do a bit of cleanup
 cv2.destroyAllWindows()
@@ -133,5 +131,4 @@ vs.stop()
 
 # check to see if the video writer point needs to be released
 if writer is not None:
-	writer.release()
-
+    writer.release()
