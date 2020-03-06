@@ -3,12 +3,16 @@
 # python recognize_faces_video.py --encodings encodings.pickle --output output/jurassic_park_trailer_output.avi --display 0
 
 # import the necessary packages
+import os
+import shutil
+from PIL import Image
+import time
 from imutils.video import VideoStream
 import face_recognition
 import argparse
 import imutils
 import pickle
-import time
+from datetime import datetime
 import cv2
 
 # construct the argument parser and parse the arguments
@@ -31,9 +35,14 @@ data = pickle.loads(open(args["encodings"], "rb").read())
 # initialize the video stream and pointer to output video file, then
 # allow the camera sensor to warm up
 print("[INFO] starting video stream...")
-vs = VideoStream(src=0).start()
+vs = VideoStream(src=1).start()
 writer = None
 time.sleep(2.0)
+
+found = False
+unknownFaces = 0
+knownFaces = 0
+counter = 0
 
 # loop over frames from the video file stream
 while True:
@@ -49,17 +58,19 @@ while True:
     # detect the (x, y)-coordinates of the bounding boxes
     # corresponding to each face in the input frame, then compute
     # the facial embeddings for each face
-    boxes = face_recognition.face_locations(rgb,
-                                            model=args["detection_method"])
+    boxes = face_recognition.face_locations(rgb, model=args["detection_method"])
     encodings = face_recognition.face_encodings(rgb, boxes)
     names = []
 
     # loop over the facial embeddings
+    print("Face detected: ", len(encodings))
+
+    found = False
     for encoding in encodings:
         # attempt to match each face in the input image to our known
         # encodings
-        matches = face_recognition.compare_faces(data["encodings"],
-                                                 encoding)
+        found = True
+        matches = face_recognition.compare_faces(data["encodings"], encoding)
         name = "Unknown"
 
         # check to see if we have found a match
@@ -84,9 +95,33 @@ while True:
                 name = max(counts, key=counts.get)
             else:
                 name = "Unknown"
+            if (name == "Unknown"):
+                unknownFaces += 1
+            else:
+                knownFaces += 1
+                counter = 0
+            now = datetime.now()
+            if (now.second % 3 == 0):
+                date_time = "temp\\" + now.strftime("%d-%m-%Y_%H-%M-%S") + ".png"
+                cv2.imwrite(date_time, rgb)
+                image = Image.open(date_time).rotate(270, expand=True)
+                image.thumbnail((600, 468), Image.ANTIALIAS)
+                image.save(date_time, quality=40, optimize=True)
 
         # update the list of names
         names.append(name)
+
+    if (not found):
+        counter += 1
+        if (counter > 10):
+            if (unknownFaces + knownFaces > 0 and (unknownFaces / (unknownFaces + knownFaces)) * 100 > 80):
+                print("Detected unknown person!")
+            unknownFaces = 0
+            knownFaces = 0
+            shutil.rmtree("temp")
+            os.mkdir("temp")
+
+    print(unknownFaces, knownFaces)
 
     # loop over the recognized faces
     for ((top, right, bottom, left), name) in zip(boxes, names):
