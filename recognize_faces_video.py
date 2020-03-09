@@ -3,6 +3,7 @@
 # python recognize_faces_video.py --encodings encodings.pickle --output output/jurassic_park_trailer_output.avi --display 0
 
 # import the necessary packages
+import concurrent.futures
 import os
 import shutil
 from PIL import Image
@@ -14,6 +15,22 @@ import imutils
 import pickle
 from datetime import datetime
 import cv2
+import threading
+import multiprocessing
+
+
+# def imageSavefromFrame(rgb, date_time):
+def imageSavefromFrame(arr):
+    print("asdfg", arr)
+    # print("Task 1 assigned to thread: {}".format(threading.current_thread().name))
+    print("ID of process running task 1: {}".format(os.getpid()))
+    cv2.imwrite(arr[1], arr[0])
+    image = Image.open(arr[1]).rotate(270, expand=True)
+    image.thumbnail((600, 468), Image.ANTIALIAS)
+    image.save(arr[1], quality=40, optimize=True)
+    print(arr[1])
+    return arr[1]
+
 
 # construct the argument parser and parse the arguments
 # ap = argparse.ArgumentParser()
@@ -35,16 +52,17 @@ data = pickle.loads(open(args["encodings"], "rb").read())
 # initialize the video stream and pointer to output video file, then
 # allow the camera sensor to warm up
 print("[INFO] starting video stream...")
-vs = VideoStream(src=1).start()
+vs = VideoStream(src=0).start()
 writer = None
-time.sleep(2.0)
 
 found = False
 unknownFaces = 0
 knownFaces = 0
 counter = 0
-
+p = None
 # loop over frames from the video file stream
+
+temp1 = []
 while True:
     # grab the frame from the threaded video stream
     frame = vs.read()
@@ -101,14 +119,30 @@ while True:
                 knownFaces += 1
                 counter = 0
             now = datetime.now()
-            if (now.second % 3 == 0):
-                date_time = "temp\\" + now.strftime("%d-%m-%Y_%H-%M-%S") + ".png"
-                cv2.imwrite(date_time, rgb)
-                image = Image.open(date_time).rotate(270, expand=True)
-                image.thumbnail((600, 468), Image.ANTIALIAS)
-                image.save(date_time, quality=40, optimize=True)
+            # # TODO solve critical section problem
 
-        # update the list of names
+            if (now.second % 5 == 0):
+                # if (p is not None):
+                #     p.join()
+                date_time = "temp\\" + now.strftime("%d-%m-%Y_%H-%M-%S.%f") + ".png"
+                temp1.append([rgb, date_time])
+                # p = threading.Thread(target=imageSavefromFrame, args=(rgb, date_time))
+
+                # p = multiprocessing.Process(target=imageSavefromFrame, args=(rgb, date_time))
+                # p.start()
+
+                # update the list of names
+
+        # if (len(temp1) > 4):
+        #     with concurrent.futures.ThreadPoolExecutor() as executor:
+        #         results = executor.map(imageSavefromFrame, temp1)
+        #         for result in results:
+        #             print(result)
+                # temp1.clear()
+                # print("Here")
+
+        print("Size: ", len(temp1))
+        print(temp1)
         names.append(name)
 
     if (not found):
@@ -116,27 +150,31 @@ while True:
         if (counter > 10):
             if (unknownFaces + knownFaces > 0 and (unknownFaces / (unknownFaces + knownFaces)) * 100 > 80):
                 print("Detected unknown person!")
+
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                results = executor.map(imageSavefromFrame, temp1)
             unknownFaces = 0
             knownFaces = 0
-            shutil.rmtree("temp")
-            os.mkdir("temp")
+            # shutil.rmtree("temp")
+            # os.mkdir("temp")
+            temp1.clear()
 
     print(unknownFaces, knownFaces)
 
-    # loop over the recognized faces
-    for ((top, right, bottom, left), name) in zip(boxes, names):
-        # rescale the face coordinates
-        top = int(top * r)
-        right = int(right * r)
-        bottom = int(bottom * r)
-        left = int(left * r)
-
-        # draw the predicted face name on the image
-        cv2.rectangle(frame, (left, top), (right, bottom),
-                      (0, 255, 0), 2)
-        y = top - 15 if top - 15 > 15 else top + 15
-        cv2.putText(frame, name, (left, y), cv2.FONT_HERSHEY_SIMPLEX,
-                    0.75, (0, 255, 0), 2)
+    # # loop over the recognized faces
+    # for ((top, right, bottom, left), name) in zip(boxes, names):
+    #     # rescale the face coordinates
+    #     top = int(top * r)
+    #     right = int(right * r)
+    #     bottom = int(bottom * r)
+    #     left = int(left * r)
+    #
+    #     # draw the predicted face name on the image
+    #     cv2.rectangle(frame, (left, top), (right, bottom),
+    #                   (0, 255, 0), 2)
+    #     y = top - 15 if top - 15 > 15 else top + 15
+    #     cv2.putText(frame, name, (left, y), cv2.FONT_HERSHEY_SIMPLEX,
+    #                 0.75, (0, 255, 0), 2)
 
     # if the video writer is None *AND* we are supposed to write
     # the output video to disk initialize the writer
