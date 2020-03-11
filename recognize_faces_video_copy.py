@@ -26,8 +26,7 @@ def imageSavefromFrame(arr):
     # print("Task 1 assigned to thread: {}".format(threading.current_thread().name))
     print("ID of process running task 1: {}".format(os.getpid()))
     cv2.imwrite(arr[1], arr[0])
-    image = Image.open(arr[1])
-        # .rotate(270, expand=True)
+    image = Image.open(arr[1]).rotate(270, expand=True)
     image.thumbnail((600, 468), Image.ANTIALIAS)
     image.save(arr[1], quality=40, optimize=True)
     print(arr[1])
@@ -72,8 +71,7 @@ while True:
     # convert the input frame from BGR to RGB then resize it to have
     # a width of 750px (to speedup processing)
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-    rgb = cv2.resize(frame, (0, 0), fx=0.7, fy=0.7)
+    rgb = imutils.resize(frame, width=750)
     r = frame.shape[1] / float(rgb.shape[1])
 
     # detect the (x, y)-coordinates of the bounding boxes
@@ -112,7 +110,7 @@ while True:
             # determine the recognized face with the largest number
             # of votes (note: in the event of an unlikely tie Python
             # will select first entry in the dictionary)
-            threshold = round(data["names"].count(name) * 0.70)
+            threshold = round(data["names"].count(name) * 0.60)
             if (counts[max(counts, key=counts.get)] >= threshold):
                 name = max(counts, key=counts.get)
             else:
@@ -149,7 +147,7 @@ while True:
 
     if (not found):
         counter += 1
-        if (counter > 100):
+        if (counter > 10):
             if (unknownFaces + knownFaces > 0 and (unknownFaces / (unknownFaces + knownFaces)) * 100 > 80):
                 print("Detected unknown person!")
             if __name__ == '__main__':

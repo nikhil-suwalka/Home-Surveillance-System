@@ -17,20 +17,15 @@ from datetime import datetime
 import cv2
 import threading
 import multiprocessing
-import time
 
 
 # def imageSavefromFrame(rgb, date_time):
 def imageSavefromFrame(arr):
-    print("asdfg", arr)
     # print("Task 1 assigned to thread: {}".format(threading.current_thread().name))
-    print("ID of process running task 1: {}".format(os.getpid()))
     cv2.imwrite(arr[1], arr[0])
-    image = Image.open(arr[1])
-        # .rotate(270, expand=True)
+    image = Image.open(arr[1]).rotate(270, expand=True)
     image.thumbnail((600, 468), Image.ANTIALIAS)
     image.save(arr[1], quality=40, optimize=True)
-    print(arr[1])
     return arr[1]
 
 
@@ -45,17 +40,8 @@ def imageSavefromFrame(arr):
 # ap.add_argument("-d", "--detection-method", type=str, default="cnn",
 # 	help="face detection model to use: either `hog` or `cnn`")
 # args = vars(ap.parse_args())
+
 args = {'encodings': 'encodings.pickle', 'output': None, 'display': 1, 'detection_method': 'cnn'}
-
-# load the known faces and embeddings
-print("[INFO] loading encodings...")
-data = pickle.loads(open(args["encodings"], "rb").read())
-
-# initialize the video stream and pointer to output video file, then
-# allow the camera sensor to warm up
-print("[INFO] starting video stream...")
-vs = VideoStream(src=0).start()
-writer = None
 
 found = False
 unknownFaces = 0
@@ -65,21 +51,20 @@ p = None
 # loop over frames from the video file stream
 
 images_to_save = []
-while True:
-    # grab the frame from the threaded video stream
-    frame = vs.read()
+
+
+def get_frame(frame, data):
+    global unknownFaces, knownFaces, counter, p, found, args
 
     # convert the input frame from BGR to RGB then resize it to have
     # a width of 750px (to speedup processing)
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-    rgb = cv2.resize(frame, (0, 0), fx=0.7, fy=0.7)
+    rgb = imutils.resize(frame, width=750)
     r = frame.shape[1] / float(rgb.shape[1])
 
     # detect the (x, y)-coordinates of the bounding boxes
     # corresponding to each face in the input frame, then compute
     # the facial embeddings for each face
-
     boxes = face_recognition.face_locations(rgb, model=args["detection_method"])
     encodings = face_recognition.face_encodings(rgb, boxes)
     names = []
@@ -108,11 +93,11 @@ while True:
             for i in matchedIdxs:
                 name = data["names"][i]
                 counts[name] = counts.get(name, 0) + 1
-            print(counts[max(counts, key=counts.get)])
+            # print(counts[max(counts, key=counts.get)])
             # determine the recognized face with the largest number
             # of votes (note: in the event of an unlikely tie Python
             # will select first entry in the dictionary)
-            threshold = round(data["names"].count(name) * 0.70)
+            threshold = round(data["names"].count(name) * 0.60)
             if (counts[max(counts, key=counts.get)] >= threshold):
                 name = max(counts, key=counts.get)
             else:
@@ -129,7 +114,7 @@ while True:
                 # if (p is not None):
                 #     p.join()
                 date_time = "temp\\" + now.strftime("%d-%m-%Y_%H-%M-%S.%f") + ".png"
-                images_to_save.append([rgb, date_time])
+                imageSavefromFrame([rgb, date_time])
                 # p = threading.Thread(target=imageSavefromFrame, args=(rgb, date_time))
 
                 # p = multiprocessing.Process(target=imageSavefromFrame, args=(rgb, date_time))
@@ -149,12 +134,12 @@ while True:
 
     if (not found):
         counter += 1
-        if (counter > 100):
+        if (counter > 10):
             if (unknownFaces + knownFaces > 0 and (unknownFaces / (unknownFaces + knownFaces)) * 100 > 80):
                 print("Detected unknown person!")
-            if __name__ == '__main__':
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    results = executor.map(imageSavefromFrame, images_to_save)
+            # if __name__ == '__main__':
+            #     with concurrent.futures.ProcessPoolExecutor() as executor:
+            #         results = executor.map(imageSavefromFrame, images_to_save)
             unknownFaces = 0
             knownFaces = 0
             # shutil.rmtree("temp")
@@ -162,48 +147,67 @@ while True:
             images_to_save.clear()
 
     print(unknownFaces, knownFaces)
+    return 123
 
-    # loop over the recognized faces
-    for ((top, right, bottom, left), name) in zip(boxes, names):
-        # rescale the face coordinates
-        top = int(top * r)
-        right = int(right * r)
-        bottom = int(bottom * r)
-        left = int(left * r)
+if __name__ == '__main__':
+    processes = []
+    # load the known faces and embeddings
+    print("[INFO] loading encodings...")
+    data = pickle.loads(open(args["encodings"], "rb").read())
 
-        # draw the predicted face name on the image
-        cv2.rectangle(frame, (left, top), (right, bottom),
-                      (0, 255, 0), 2)
-        y = top - 15 if top - 15 > 15 else top + 15
-        cv2.putText(frame, name, (left, y), cv2.FONT_HERSHEY_SIMPLEX,
-                    0.75, (0, 255, 0), 2)
+    # initialize the video stream and pointer to output video file, then
+    # allow the camera sensor to warm up
+    print("[INFO] starting video stream...")
+    vs = VideoStream(src=0).start()
+    while True:
 
-    # if the video writer is None *AND* we are supposed to write
-    # the output video to disk initialize the writer
-    if writer is None and args["output"] is not None:
-        fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-        writer = cv2.VideoWriter(args["output"], fourcc, 20,
-                                 (frame.shape[1], frame.shape[0]), True)
+        # if (len(processes) == 0):
+        #     print("Hello")
+        while (len(processes) < 10):
+            frame = vs.read()
+            # p = multiprocessing.Process(target=get_frame, args=[frame, data])
+            # processes.append(p)
+            processes.append([frame,data])
+            #
+            # if (len(processes) > 10):
+            #     print("In here")
 
-    # if the writer is not None, write the frame with recognized
-    # faces t odisk
-    if writer is not None:
-        writer.write(frame)
+            # for process in processes:
+            #     process.start()
+        print(len(processes))
+        print(len(processes[0]))
+        t = []
+        for p in processes:
+            pp = threading.Thread(target=get_frame, args=p)
+            pp.start()
+            t.append(pp)
+        for p in t:
+            p.join()
+        # with concurrent.futures.ThreadPoolExecutor() as executor:
 
-    # check to see if we are supposed to display the output frame to
-    # the screen
-    if args["display"] > 0:
-        cv2.imshow("Frame", frame)
+            # results = executor.map(get_frame, processes)
+            # for result in results:
+            #     print(result)
+            # processes.clear()
+        # else:
+        #     print("Hello2")
+        #
+        #     i = 0
+        #     while (len(processes) > 0):
+        #         if (not processes[i].is_alive()):
+        #             del processes[i]
+        #             i-=1
+        #         i += 1
+        # if (i >= len(processes)):
+        #     break
+
+        # cv2.imshow("Frame", frame)
         key = cv2.waitKey(1) & 0xFF
 
         # if the `q` key was pressed, break from the loop
         if key == ord("q"):
             break
 
-# do a bit of cleanup
-cv2.destroyAllWindows()
-vs.stop()
-
-# check to see if the video writer point needs to be released
-if writer is not None:
-    writer.release()
+    # do a bit of cleanupqq
+    cv2.destroyAllWindows()
+    vs.stop()
