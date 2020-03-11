@@ -5,46 +5,27 @@
 # import the necessary packages
 import concurrent.futures
 import os
-import shutil
 from PIL import Image
-import time
 from imutils.video import VideoStream
 import face_recognition
-import argparse
-import imutils
 import pickle
 from datetime import datetime
 import cv2
-import threading
-import multiprocessing
-import time
 
 
 # def imageSavefromFrame(rgb, date_time):
 def imageSavefromFrame(arr):
-    print("asdfg", arr)
     # print("Task 1 assigned to thread: {}".format(threading.current_thread().name))
     print("ID of process running task 1: {}".format(os.getpid()))
     cv2.imwrite(arr[1], arr[0])
     image = Image.open(arr[1])
-        # .rotate(270, expand=True)
+    # .rotate(270, expand=True)
     image.thumbnail((600, 468), Image.ANTIALIAS)
     image.save(arr[1], quality=40, optimize=True)
     print(arr[1])
     return arr[1]
 
 
-# construct the argument parser and parse the arguments
-# ap = argparse.ArgumentParser()
-# ap.add_argument("-e", "--encodings", required=True,
-# 	help="path to serialized db of facial encodings")
-# ap.add_argument("-o", "--output", type=str,
-# 	help="path to output video")
-# ap.add_argument("-y", "--display", type=int, default=1,
-# 	help="whether or not to display output frame to screen")
-# ap.add_argument("-d", "--detection-method", type=str, default="cnn",
-# 	help="face detection model to use: either `hog` or `cnn`")
-# args = vars(ap.parse_args())
 args = {'encodings': 'encodings.pickle', 'output': None, 'display': 1, 'detection_method': 'cnn'}
 
 # load the known faces and embeddings
@@ -54,8 +35,7 @@ data = pickle.loads(open(args["encodings"], "rb").read())
 # initialize the video stream and pointer to output video file, then
 # allow the camera sensor to warm up
 print("[INFO] starting video stream...")
-vs = VideoStream(src=0).start()
-writer = None
+vs = VideoStream(src=1).start()
 
 found = False
 unknownFaces = 0
@@ -126,24 +106,8 @@ while True:
             # # TODO solve critical section problem
 
             if (now.second % 5 == 0):
-                # if (p is not None):
-                #     p.join()
                 date_time = "temp\\" + now.strftime("%d-%m-%Y_%H-%M-%S.%f") + ".png"
                 images_to_save.append([rgb, date_time])
-                # p = threading.Thread(target=imageSavefromFrame, args=(rgb, date_time))
-
-                # p = multiprocessing.Process(target=imageSavefromFrame, args=(rgb, date_time))
-                # p.start()
-
-                # update the list of names
-
-        # if (len(temp1) > 4):
-        #     with concurrent.futures.ThreadPoolExecutor() as executor:
-        #         results = executor.map(imageSavefromFrame, temp1)
-        #         for result in results:
-        #             print(result)
-        # temp1.clear()
-        # print("Here")
 
         names.append(name)
 
@@ -178,32 +142,13 @@ while True:
         cv2.putText(frame, name, (left, y), cv2.FONT_HERSHEY_SIMPLEX,
                     0.75, (0, 255, 0), 2)
 
-    # if the video writer is None *AND* we are supposed to write
-    # the output video to disk initialize the writer
-    if writer is None and args["output"] is not None:
-        fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-        writer = cv2.VideoWriter(args["output"], fourcc, 20,
-                                 (frame.shape[1], frame.shape[0]), True)
+    cv2.imshow("Frame", frame)
+    key = cv2.waitKey(1) & 0xFF
 
-    # if the writer is not None, write the frame with recognized
-    # faces t odisk
-    if writer is not None:
-        writer.write(frame)
-
-    # check to see if we are supposed to display the output frame to
-    # the screen
-    if args["display"] > 0:
-        cv2.imshow("Frame", frame)
-        key = cv2.waitKey(1) & 0xFF
-
-        # if the `q` key was pressed, break from the loop
-        if key == ord("q"):
-            break
+    # if the `q` key was pressed, break from the loop
+    if key == ord("q"):
+        break
 
 # do a bit of cleanup
 cv2.destroyAllWindows()
 vs.stop()
-
-# check to see if the video writer point needs to be released
-if writer is not None:
-    writer.release()
