@@ -5,6 +5,9 @@
 # import the necessary packages
 import concurrent.futures
 import os
+import shutil
+import json
+
 from PIL import Image
 from imutils.video import VideoStream
 import face_recognition
@@ -35,13 +38,14 @@ data = pickle.loads(open(args["encodings"], "rb").read())
 # initialize the video stream and pointer to output video file, then
 # allow the camera sensor to warm up
 print("[INFO] starting video stream...")
-vs = VideoStream(src=1).start()
+vs = VideoStream(src=0).start()
 
 found = False
 unknownFaces = 0
 knownFaces = 0
 counter = 0
 p = None
+detectedKnownFace = 0
 # loop over frames from the video file stream
 
 images_to_save = []
@@ -69,6 +73,12 @@ while True:
 
     found = False
     for encoding in encodings:
+        now = datetime.now()
+
+        if (now.second % 5 == 0):
+            print("Take pic")
+            date_time = "temp\\" + now.strftime("%d-%m-%Y_%H-%M-%S.%f") + ".png"
+            images_to_save.append([rgb, date_time])
         # attempt to match each face in the input image to our known
         # encodings
         found = True
@@ -95,25 +105,49 @@ while True:
             threshold = round(data["names"].count(name) * 0.70)
             if (counts[max(counts, key=counts.get)] >= threshold):
                 name = max(counts, key=counts.get)
+                if (len(encodings) == 1 and counts[max(counts, key=counts.get)] >= round(data["names"].count(name))):
+                    print("known")
+                    detectedKnownFace += 1
+                    if (detectedKnownFace >= 5):
+                        f = open("known_face_save_tracker.txt", "r")
+                        json_string = f.read()
+                        imageSavefromFrame([rgb, "knownimages\\" + now.strftime("%d-%m-%Y_%H-%M-%S.%f") + ".png"])
+                        detectedKnownFace = 0
+                        if (len(json_string) > 0):
+                            json_array = json.loads(json_string)
+                        else:
+                            json_array = json.loads("{}")
+                        if (name in json_array.keys()):
+                            if (json_array[name] != now.strftime("%d-%m-%Y")):
+                                json_array[name] = now.strftime("%d-%m-%Y")
+
+                        #     TODO: pic khichni h
+                        else:
+                            json_array[name] = now.strftime("%d-%m-%Y")
+
+                        print("Json-array: ", json_array)
+                        f.close()
+
+                        f = open("known_face_save_tracker.txt", "w")
+                        f.write(json.dumps(json_array))
+                        f.close()
+
             else:
                 name = "Unknown"
+                detectedKnownFace = 0
             if (name == "Unknown"):
                 unknownFaces += 1
             else:
                 knownFaces += 1
                 counter = 0
-            now = datetime.now()
-            # # TODO solve critical section problem
 
-            if (now.second % 5 == 0):
-                date_time = "temp\\" + now.strftime("%d-%m-%Y_%H-%M-%S.%f") + ".png"
-                images_to_save.append([rgb, date_time])
+            # # TODO solve critical section problem
 
         names.append(name)
 
     if (not found):
         counter += 1
-        if (counter > 100):
+        if (counter > 30):
             if (unknownFaces + knownFaces > 0 and (unknownFaces / (unknownFaces + knownFaces)) * 100 > 80):
                 print("Detected unknown person!")
             if __name__ == '__main__':
@@ -121,9 +155,10 @@ while True:
                     results = executor.map(imageSavefromFrame, images_to_save)
             unknownFaces = 0
             knownFaces = 0
-            # shutil.rmtree("temp")
-            # os.mkdir("temp")
+            shutil.rmtree("temp")
+            os.mkdir("temp")
             images_to_save.clear()
+            counter = 0
 
     print(unknownFaces, knownFaces)
 
