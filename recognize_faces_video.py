@@ -109,7 +109,7 @@ while True:
                     print("known")
                     detectedKnownFace += 1
                     if (detectedKnownFace >= 5):
-                        f = open("known_face_save_tracker.txt", "r")
+                        f = open("known_face_save_tracker.txt", "r+")
                         json_string = f.read()
                         imageSavefromFrame([rgb, "knownimages\\" + now.strftime("%d-%m-%Y_%H-%M-%S.%f") + ".png"])
                         detectedKnownFace = 0
@@ -126,9 +126,8 @@ while True:
                             json_array[name] = now.strftime("%d-%m-%Y")
 
                         print("Json-array: ", json_array)
-                        f.close()
-
-                        f = open("known_face_save_tracker.txt", "w")
+                        f.truncate()
+                        f.seek(0)
                         f.write(json.dumps(json_array))
                         f.close()
 
