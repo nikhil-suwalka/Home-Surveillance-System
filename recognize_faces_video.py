@@ -7,7 +7,7 @@ import concurrent.futures
 import os
 import shutil
 import json
-import threading
+
 from PIL import Image
 from imutils.video import VideoStream
 import face_recognition
@@ -15,7 +15,7 @@ import pickle
 from datetime import datetime
 import cv2
 import shutil
-
+import threading
 
 # def imageSavefromFrame(rgb, date_time):
 def imageSavefromFrame(arr):
@@ -123,7 +123,8 @@ while True:
                                 json_array[name] = now.strftime("%d-%m-%Y")
                                 arg = [rgb, "dataset\\" + name + "\\" + now.strftime("%d-%m-%Y_%H-%M-%S.%f") + ".png"]
                                 threading.Thread(target=imageSavefromFrame, args=[arg]).start()
-
+                                # os.system("encode_faces.py")
+                                threading.Thread(target=os.system, args = ["encode_faces.py"]).start()
                         else:
                             json_array[name] = now.strftime("%d-%m-%Y")
 
