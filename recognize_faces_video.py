@@ -7,7 +7,7 @@ import concurrent.futures
 import os
 import shutil
 import json
-
+import threading
 from PIL import Image
 from imutils.video import VideoStream
 import face_recognition
@@ -121,8 +121,8 @@ while True:
                         if (name in json_array.keys()):
                             if (json_array[name] != now.strftime("%d-%m-%Y")):
                                 json_array[name] = now.strftime("%d-%m-%Y")
-                                imageSavefromFrame(
-                                    [rgb, "dataset\\" + name + "\\" + now.strftime("%d-%m-%Y_%H-%M-%S.%f") + ".png"])
+                                arg = [rgb, "dataset\\" + name + "\\" + now.strftime("%d-%m-%Y_%H-%M-%S.%f") + ".png"]
+                                threading.Thread(target=imageSavefromFrame, args=[arg]).start()
 
                         else:
                             json_array[name] = now.strftime("%d-%m-%Y")
