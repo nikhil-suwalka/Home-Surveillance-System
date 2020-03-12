@@ -20,7 +20,6 @@ import threading
 # def imageSavefromFrame(rgb, date_time):
 def imageSavefromFrame(arr):
     # print("Task 1 assigned to thread: {}".format(threading.current_thread().name))
-    print("ID of process running task 1: {}".format(os.getpid()))
     cv2.imwrite(arr[1], arr[0])
     image = Image.open(arr[1])
     # .rotate(270, expand=True)
@@ -70,14 +69,13 @@ while True:
     names = []
 
     # loop over the facial embeddings
-    print("Face detected: ", len(encodings))
+
 
     found = False
     for encoding in encodings:
         now = datetime.now()
 
         if (now.second % 5 == 0):
-            print("Take pic")
             date_time = "temp\\" + now.strftime("%d-%m-%Y_%H-%M-%S.%f") + ".png"
             images_to_save.append([rgb, date_time])
         # attempt to match each face in the input image to our known
@@ -99,20 +97,18 @@ while True:
             for i in matchedIdxs:
                 name = data["names"][i]
                 counts[name] = counts.get(name, 0) + 1
-            print(counts[max(counts, key=counts.get)])
+            print("Face detected: ", len(encodings),"Total images matched: ",counts[max(counts, key=counts.get)],end=" ")
             # determine the recognized face with the largest number
             # of votes (note: in the event of an unlikely tie Python
             # will select first entry in the dictionary)
             threshold = round(data["names"].count(name) * 0.70)
             if (counts[max(counts, key=counts.get)] >= threshold):
                 name = max(counts, key=counts.get)
-                if (len(encodings) == 1 and counts[max(counts, key=counts.get)] >= round(data["names"].count(name))):
-                    print("known")
+                if (len(encodings) == 1 and counts[max(counts, key=counts.get)] >= round(data["names"].count(name)*0.95)):
                     detectedKnownFace += 1
                     if (detectedKnownFace >= 5):
                         f = open("known_face_save_tracker.txt", "r+")
                         json_string = f.read()
-
                         detectedKnownFace = 0
                         if (len(json_string) > 0):
                             json_array = json.loads(json_string)
@@ -124,16 +120,14 @@ while True:
                                 arg = [rgb, "dataset\\" + name + "\\" + now.strftime("%d-%m-%Y_%H-%M-%S.%f") + ".png"]
                                 threading.Thread(target=imageSavefromFrame, args=[arg]).start()
                                 # os.system("encode_faces.py")
+                                threading.Thread(target=os.system, args=["compress_image.py --img "+arg[1]]).start()
                                 threading.Thread(target=os.system, args = ["encode_faces.py"]).start()
                         else:
                             json_array[name] = now.strftime("%d-%m-%Y")
-
-                        print("Json-array: ", json_array)
                         f.truncate()
                         f.seek(0)
                         f.write(json.dumps(json_array))
                         f.close()
-
             else:
                 name = "Unknown"
                 detectedKnownFace = 0
@@ -151,7 +145,7 @@ while True:
         counter += 1
         if (counter > 30):
             if (unknownFaces + knownFaces > 0 and (unknownFaces / (unknownFaces + knownFaces)) * 100 > 80):
-                print("Detected unknown person!")
+                print("\nDetected unknown person!")
             if __name__ == '__main__':
                 with concurrent.futures.ThreadPoolExecutor() as executor:
                     results = executor.map(imageSavefromFrame, images_to_save)
@@ -162,7 +156,7 @@ while True:
             images_to_save.clear()
             counter = 0
 
-    print(unknownFaces, knownFaces)
+    print("(",unknownFaces, knownFaces,")")
 
     # loop over the recognized faces
     for ((top, right, bottom, left), name) in zip(boxes, names):
