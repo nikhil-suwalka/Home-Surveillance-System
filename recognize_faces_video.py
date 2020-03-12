@@ -14,6 +14,7 @@ import face_recognition
 import pickle
 from datetime import datetime
 import cv2
+import shutil
 
 
 # def imageSavefromFrame(rgb, date_time):
@@ -111,7 +112,7 @@ while True:
                     if (detectedKnownFace >= 5):
                         f = open("known_face_save_tracker.txt", "r+")
                         json_string = f.read()
-                        imageSavefromFrame([rgb, "knownimages\\" + now.strftime("%d-%m-%Y_%H-%M-%S.%f") + ".png"])
+
                         detectedKnownFace = 0
                         if (len(json_string) > 0):
                             json_array = json.loads(json_string)
@@ -120,8 +121,9 @@ while True:
                         if (name in json_array.keys()):
                             if (json_array[name] != now.strftime("%d-%m-%Y")):
                                 json_array[name] = now.strftime("%d-%m-%Y")
+                                imageSavefromFrame(
+                                    [rgb, "dataset\\" + name + "\\" + now.strftime("%d-%m-%Y_%H-%M-%S.%f") + ".png"])
 
-                        #     TODO: pic khichni h
                         else:
                             json_array[name] = now.strftime("%d-%m-%Y")
 
