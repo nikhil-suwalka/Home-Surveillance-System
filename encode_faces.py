@@ -85,6 +85,7 @@ for d in oldData:
     if d not in data:
         data[d] = oldData[d]
 print(oldData)
+print(data)
 fr.close()
 f = open(args["encodings"], "wb")
 f.write(pickle.dumps(data))

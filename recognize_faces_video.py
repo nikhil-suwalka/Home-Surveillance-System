@@ -101,12 +101,13 @@ while True:
             # determine the recognized face with the largest number
             # of votes (note: in the event of an unlikely tie Python
             # will select first entry in the dictionary)
-            threshold = round(data["names"].count(name) * 0.70)
+            threshold = round(data["names"].count(name) * 0.80)
+            print(threshold)
             if (counts[max(counts, key=counts.get)] >= threshold):
                 name = max(counts, key=counts.get)
                 if (len(encodings) == 1 and counts[max(counts, key=counts.get)] >= round(data["names"].count(name)*0.95)):
                     detectedKnownFace += 1
-                    if (detectedKnownFace >= 5):
+                    if (detectedKnownFace >= 3):
                         f = open("known_face_save_tracker.txt", "r+")
                         json_string = f.read()
                         detectedKnownFace = 0
@@ -120,10 +121,19 @@ while True:
                                 arg = [rgb, "dataset\\" + name + "\\" + now.strftime("%d-%m-%Y_%H-%M-%S.%f") + ".png"]
                                 threading.Thread(target=imageSavefromFrame, args=[arg]).start()
                                 # os.system("encode_faces.py")
-                                threading.Thread(target=os.system, args=["compress_image.py --img "+arg[1]]).start()
+                                t = threading.Thread(target=os.system, args=["compress_image.py --img "+arg[1]])
+                                t.start()
+                                t.join()
                                 threading.Thread(target=os.system, args = ["encode_faces.py"]).start()
                         else:
                             json_array[name] = now.strftime("%d-%m-%Y")
+                            arg = [rgb, "dataset\\" + name + "\\" + now.strftime("%d-%m-%Y_%H-%M-%S.%f") + ".png"]
+                            threading.Thread(target=imageSavefromFrame, args=[arg]).start()
+                            # os.system("encode_faces.py")
+                            t = threading.Thread(target=os.system, args=["compress_image.py --img " + arg[1]])
+                            t.start()
+                            t.join()
+                            threading.Thread(target=os.system, args=["encode_faces.py"]).start()
                         f.truncate()
                         f.seek(0)
                         f.write(json.dumps(json_array))
