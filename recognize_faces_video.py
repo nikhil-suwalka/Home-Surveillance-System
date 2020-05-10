@@ -5,8 +5,8 @@
 # import the necessary packages
 import concurrent.futures
 import os
-import shutil
 import json
+
 
 from PIL import Image
 from imutils.video import VideoStream
@@ -80,12 +80,13 @@ while True:
             images_to_save.append([rgb, date_time])
         # attempt to match each face in the input image to our known
         # encodings
-        found = True
+
         matches = face_recognition.compare_faces(data["encodings"], encoding)
         name = "Unknown"
 
         # check to see if we have found a match
         if True in matches:
+            found = True
             # find the indexes of all matched faces then initialize a
             # dictionary to count the total number of times each face
             # was matched
@@ -107,7 +108,13 @@ while True:
                 name = max(counts, key=counts.get)
                 if (len(encodings) == 1 and counts[max(counts, key=counts.get)] >= round(data["names"].count(name)*0.95)):
                     detectedKnownFace += 1
-                    if (detectedKnownFace >= 3):
+                    if (detectedKnownFace >= 5):
+
+                        logfile = open("detectionlog.txt", "a")
+                        time = datetime.now().strftime('[%d-%m-%Y %H:%M:%S]')
+                        logfile.write(time + " Detected "+name+"\n")
+                        logfile.close()
+
                         f = open("known_face_save_tracker.txt", "r+")
                         json_string = f.read()
                         detectedKnownFace = 0
@@ -147,14 +154,16 @@ while True:
                 knownFaces += 1
                 counter = 0
 
-            # # TODO solve critical section problem
-
         names.append(name)
 
     if (not found):
         counter += 1
         if (counter > 30):
-            if (unknownFaces + knownFaces > 0 and (unknownFaces / (unknownFaces + knownFaces)) * 100 > 80):
+            if(unknownFaces+knownFaces>0 and (unknownFaces/(unknownFaces+knownFaces))*100>80):
+                logfile = open("detectionlog.txt", "a")
+                time = datetime.now().strftime('[%d-%m-%Y %H:%M:%S]')
+                logfile.write(time+" Detected unknown person\n")
+                logfile.close()
                 print("\nDetected unknown person!")
             if __name__ == '__main__':
                 with concurrent.futures.ThreadPoolExecutor() as executor:
