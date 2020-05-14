@@ -326,6 +326,10 @@ class Toplevel1:
         self.frame_detectLog.configure(highlightcolor="black")
 
         self.textbox_facelog = ScrolledText(self.frame_detectLog)
+        try:
+            open("detectionlog.txt", "r").close()
+        except:
+            open("detectionlog.txt", "w").close()
         logfile = open('detectionlog.txt', 'r')
         for entry in logfile:
             self.textbox_facelog.insert(tk.INSERT,entry)

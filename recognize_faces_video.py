@@ -110,11 +110,21 @@ while True:
                 if (len(encodings) == 1 and counts[max(counts, key=counts.get)] >= round(data["names"].count(name)*0.95)):
                     detectedKnownFace += 1
                     if (detectedKnownFace >= 5):
+                        # writing detected names into log file
+                        try:
+                            open("detectionlog.txt", "r").close()
+                        except:
+                            open("detectionlog.txt", "w").close()
 
-                        logfile = open("detectionlog.txt", "a")
+                        logfileR = open("detectionlog.txt", "r")
+                        logdata = logfileR.read()
+                        logfileR.close()
+
+                        logfileW = open("detectionlog.txt", "w")
                         time = datetime.now().strftime('[%d-%m-%Y %H:%M:%S]')
-                        logfile.write(time + " Detected "+name+"\n")
-                        logfile.close()
+                        logdata = (time + " Detected "+name+"\n") + logdata
+                        logfileW.write(logdata)
+                        logfileW.close()
 
                         f = open("known_face_save_tracker.txt", "r+")
                         json_string = f.read()
@@ -161,10 +171,22 @@ while True:
         counter += 1
         if (counter > 30):
             if(unknownFaces+knownFaces>0 and (unknownFaces/(unknownFaces+knownFaces))*100>80):
-                logfile = open("detectionlog.txt", "a")
+                # writing detected names into log file
+                try:
+                    open("detectionlog.txt", "r").close()
+                except:
+                    open("detectionlog.txt", "w").close()
+
+                logfileR = open("detectionlog.txt", "r")
+                logdata = logfileR.read()
+                logfileR.close()
+
+                logfileW = open("detectionlog.txt", "w")
                 time = datetime.now().strftime('[%d-%m-%Y %H:%M:%S]')
-                logfile.write(time+" Detected unknown person\n")
-                logfile.close()
+                logdata = (time+" Detected unknown person\n") + logdata
+                logfileW.write(logdata)
+                logfileW.close()
+
                 print("\nDetected unknown person!")
             if __name__ == '__main__':
                 with concurrent.futures.ThreadPoolExecutor() as executor:
