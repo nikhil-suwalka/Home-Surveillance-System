@@ -86,7 +86,7 @@ while True:
 
         # check to see if we have found a match
         if True in matches:
-            found = True
+
             # find the indexes of all matched faces then initialize a
             # dictionary to count the total number of times each face
             # was matched
@@ -105,6 +105,7 @@ while True:
             threshold = round(data["names"].count(name) * 0.80)
             print(threshold)
             if (counts[max(counts, key=counts.get)] >= threshold):
+                found = True
                 name = max(counts, key=counts.get)
                 if (len(encodings) == 1 and counts[max(counts, key=counts.get)] >= round(data["names"].count(name)*0.95)):
                     detectedKnownFace += 1
