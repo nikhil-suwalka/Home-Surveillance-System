@@ -107,7 +107,7 @@ while True:
             if (counts[max(counts, key=counts.get)] >= threshold):
                 found = True
                 name = max(counts, key=counts.get)
-                if (len(encodings) == 1 and counts[max(counts, key=counts.get)] >= round(data["names"].count(name)*0.95)):
+                if (len(encodings) == 1 and counts[max(counts, key=counts.get)] >= round(data["names"].count(name)*0.80)):
                     detectedKnownFace += 1
                     if (detectedKnownFace >= 5):
                         # writing detected names into log file
