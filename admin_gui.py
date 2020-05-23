@@ -147,7 +147,7 @@ class Toplevel1:
         self.btn_takePhoto.configure(state="disabled")
 
         self.Label1 = tk.Label(self.frame_register)
-        self.Label1.place(relx=0.284, rely=0.378, height=21, width=33)
+        self.Label1.place(relx=0.27, rely=0.378, height=21, width=33)
         self.Label1.configure(activebackground="#f9f9f9")
         self.Label1.configure(activeforeground="black")
         self.Label1.configure(background="#b3b3d9")

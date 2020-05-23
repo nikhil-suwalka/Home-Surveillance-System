@@ -8,6 +8,8 @@ import os
 import json
 
 
+from alertMail import sendMail
+
 from PIL import Image
 from imutils.video import VideoStream
 import face_recognition
@@ -38,7 +40,7 @@ data = pickle.loads(open(args["encodings"], "rb").read())
 # initialize the video stream and pointer to output video file, then
 # allow the camera sensor to warm up
 print("[INFO] starting video stream...")
-vs = VideoStream(src=0).start()
+vs = VideoStream(src=1).start()
 
 found = False
 unknownFaces = 0
@@ -187,14 +189,16 @@ while True:
                 logfileW.write(logdata)
                 logfileW.close()
 
-                print("\nDetected unknown person!")
+            tempImages = os.listdir("temp")
             if __name__ == '__main__':
                 with concurrent.futures.ThreadPoolExecutor() as executor:
                     results = executor.map(imageSavefromFrame, images_to_save)
+                    results1 = executor.map(sendMail, ["suwalka18@gmail.com",tempImages])
+                    # threading.Thread(target=sendMail,args=["suwalka18@gmail.com",tempImages]).start()
+
             unknownFaces = 0
             knownFaces = 0
-            shutil.rmtree("temp")
-            os.mkdir("temp")
+
             images_to_save.clear()
             counter = 0
 
