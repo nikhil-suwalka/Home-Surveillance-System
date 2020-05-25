@@ -166,7 +166,81 @@ class Toplevel1:
         self.Frame2.configure(background="#d0d0e8")
         self.Frame2.configure(highlightbackground="#d9d9d9")
         self.Frame2.configure(highlightcolor="black")
+        # ============================================================
+        # Add owner
+        self.Frame3 = tk.Frame(self.frame_register)
+        self.Frame3.place(relx=0.35, rely=0.054, relheight=0.71
+                          , relwidth=0.62)
+        self.Frame3.configure(relief='groove')
+        self.Frame3.configure(borderwidth="2")
+        self.Frame3.configure(relief="groove")
+        self.Frame3.configure(background="#d0d0e8")
+        self.Frame3.configure(highlightbackground="#d9d9d9")
+        self.Frame3.configure(highlightcolor="black")
 
+        self.lbl_addOwner = tk.Label(self.Frame3)
+        self.lbl_addOwner.place(relx=0.03, rely=0.025, height=21, width=80)
+        self.lbl_addOwner.configure(activebackground="#f9f9f9")
+        self.lbl_addOwner.configure(activeforeground="black")
+        self.lbl_addOwner.configure(background="#d0d0e8")
+        self.lbl_addOwner.configure(disabledforeground="#a3a3a3")
+        self.lbl_addOwner.configure(foreground="#000000")
+        self.lbl_addOwner.configure(highlightbackground="#d9d9d9")
+        self.lbl_addOwner.configure(highlightcolor="black")
+        self.lbl_addOwner.configure(text='''Owner's Name''')
+
+        self.textbox_addOwner = tk.Entry(self.Frame3)
+        self.textbox_addOwner.place(relx=0.03, rely=0.075, height=20
+                                 , relwidth=0.5)
+        self.textbox_addOwner.configure(background="white")
+        self.textbox_addOwner.configure(disabledforeground="#a3a3a3")
+        self.textbox_addOwner.configure(font="TkFixedFont")
+        self.textbox_addOwner.configure(foreground="#000000")
+        self.textbox_addOwner.configure(highlightbackground="#d9d9d9")
+        self.textbox_addOwner.configure(highlightcolor="black")
+        self.textbox_addOwner.configure(insertbackground="black")
+        self.textbox_addOwner.configure(selectbackground="#c4c4c4")
+        self.textbox_addOwner.configure(selectforeground="black")
+
+        self.btn_addOwner = tk.Button(self.Frame3,command=self.addOwner2TxtFile)
+        self.btn_addOwner.place(relx=0.55, rely=0.07, height=24
+                                      , width=87)
+        self.btn_addOwner.configure(activebackground="#ececec")
+        self.btn_addOwner.configure(activeforeground="#000000")
+        self.btn_addOwner.configure(background="#b3b3d9")
+        self.btn_addOwner.configure(disabledforeground="#a3a3a3")
+        self.btn_addOwner.configure(foreground="#000000")
+        self.btn_addOwner.configure(highlightbackground="#d9d9d9")
+        self.btn_addOwner.configure(highlightcolor="black")
+        self.btn_addOwner.configure(pady="0")
+        self.btn_addOwner.configure(text='''Add Owner''')
+
+        self.btn_delOwner = tk.Button(self.Frame3,command=self.delOwnerFromTxtFile)
+        self.btn_delOwner.place(relx=0.3, rely=0.67, height=24
+                                , width=87)
+        self.btn_delOwner.configure(activebackground="#ececec")
+        self.btn_delOwner.configure(activeforeground="#000000")
+        self.btn_delOwner.configure(background="#b3b3d9")
+        self.btn_delOwner.configure(disabledforeground="#a3a3a3")
+        self.btn_delOwner.configure(foreground="#000000")
+        self.btn_delOwner.configure(highlightbackground="#d9d9d9")
+        self.btn_delOwner.configure(highlightcolor="black")
+        self.btn_delOwner.configure(pady="0")
+        self.btn_delOwner.configure(text='''Delete Owner''')
+
+        self.listbox_OwnerList = ScrolledListBox(self.Frame3)
+        self.listbox_OwnerList.place(relx=0.03, rely=0.15, relheight=0.5
+                                      , relwidth=0.725)
+        self.listbox_OwnerList.configure(background="white")
+        self.listbox_OwnerList.configure(cursor="xterm")
+        self.listbox_OwnerList.configure(disabledforeground="#a3a3a3")
+        self.listbox_OwnerList.configure(font="TkFixedFont")
+        self.listbox_OwnerList.configure(foreground="black")
+        self.listbox_OwnerList.configure(highlightbackground="#d9d9d9")
+        self.listbox_OwnerList.configure(highlightcolor="#d9d9d9")
+        self.listbox_OwnerList.configure(selectbackground="#c4c4c4")
+        self.listbox_OwnerList.configure(selectforeground="black")
+        # ============================================================
         self.textbox_fname = tk.Entry(self.Frame2)
         self.textbox_fname.place(relx=0.046, rely=0.182, height=20
                 , relwidth=0.898)
@@ -422,6 +496,15 @@ class Toplevel1:
         self.frame_detectLog.place_forget()
         self.frame_register.place(relx=0.0, rely=0.0, relheight=1.002
                                   , relwidth=1.0)
+        if not os.path.exists("owner_email.txt"):
+            open("owner_email.txt",'w').close()
+        mailIdFile = open("owner_email.txt",'r')
+        mailIds = mailIdFile.readlines()
+        self.listbox_OwnerList.delete(0,tk.END)
+        for i in range(len(mailIds)):
+            self.listbox_OwnerList.insert(i,mailIds[i])
+        mailIdFile.close()
+
     def show_managePanel(self):
         self.frame_detectLog.place_forget()
         self.frame_register.place_forget()
@@ -513,6 +596,43 @@ class Toplevel1:
         if(waitMessageBox):
             os.system("encode_faces.py")
             messagebox.showinfo(title="Refreshing Dataset", message="Dataset is refreshed, please press ok to continue! ")
+
+    def addOwner2TxtFile(self):
+        emailId = self.textbox_addOwner.get()
+        mailIdFile = open("owner_email.txt",'a')
+        mailIdFile.write(emailId+"\n")
+        mailIdFile.close()
+
+        #refresh
+        self.listbox_OwnerList.delete(0,tk.END)
+        mailIdFile = open("owner_email.txt",'r')
+        mailIds = mailIdFile.readlines()
+        for i in range(len(mailIds)):
+            self.listbox_OwnerList.insert(i,mailIds[i])
+        mailIdFile.close()
+
+    def delOwnerFromTxtFile(self):
+        delId = self.listbox_OwnerList.get(tk.ACTIVE)
+        self.listbox_OwnerList.delete(0,tk.END)
+        mailIdFile = open("owner_email.txt",'r')
+        mailIds = mailIdFile.readlines()
+        mailIds.remove(delId)
+        mailIdFile.close()
+
+        open("owner_email.txt",'w').close()
+        mailIdFile = open("owner_email.txt",'a')
+        for mailId in mailIds:
+            mailIdFile.write(mailId)
+        mailIdFile.close()
+
+        #refresh
+        self.listbox_OwnerList.delete(0,tk.END)
+        mailIdFile = open("owner_email.txt",'r')
+        mailIds = mailIdFile.readlines()
+        for i in range(len(mailIds)):
+            self.listbox_OwnerList.insert(i,mailIds[i])
+        mailIdFile.close()
+
 
 # The following code is added to facilitate the Scrolled widgets you specified.
 class AutoScroll(object):

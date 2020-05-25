@@ -31,10 +31,10 @@ def imageSavefromFrame(arr):
     return arr[1]
 
 prevSentMailTime = -5
-def getPrevSentTime(toaddr,tempImages):
+def getPrevSentTime(*tempImages):
     global prevSentMailTime
     print("Called mailing===============================================================================================")
-    sendMail(toaddr,tempImages)
+    sendMail(tempImages)
 
 args = {'encodings': 'encodings.pickle', 'output': None, 'display': 1, 'detection_method': 'cnn'}
 
@@ -206,9 +206,12 @@ while True:
                 if __name__ == '__main__':
                     with concurrent.futures.ThreadPoolExecutor() as executor:
                         results = executor.map(imageSavefromFrame, images_to_save)
-                threading.Thread(target=getPrevSentTime,args=("nishit.shanbhag@gmail.com",tempImages)).start()
-                prevSentMailTime = int(datetime.now().strftime("%H%M"))
-                images_to_save.clear()
+                if os.path.exists("owner_email.txt"):
+                    threading.Thread(target=getPrevSentTime,args=tempImages).start()
+                    prevSentMailTime = int(datetime.now().strftime("%H%M"))
+                    images_to_save.clear()
+                else:
+                    print("=======================No owner EmailIDs present!!==============================")
             unknownFaces = 0
             knownFaces = 0
 
