@@ -10,16 +10,19 @@ from email import encoders
 
 
 def sendMail(toaddr,attachments):
+    print(toaddr,attachments)
     fromaddr = "noreply.homesurveillance@gmail.com"
 
     msg = MIMEMultipart()
     msg['From'] = fromaddr
     msg['To'] = toaddr
-    msg['Subject'] = "[HomeSurveillance] Unknow Person Detected"
+    msg['Subject'] = "[HomeSurveillance] Unknown Person Detected"
     body = "Unknown person detected in premises at "+datetime.now().strftime("%d-%m-%Y %H:%M:%S")+"\n Please find attached images of the person."
 
     msg.attach(MIMEText(body, 'plain'))
 
+    while(len(attachments)==0):
+        attachments = os.listdir("temp")
 
     for attachment in attachments:
         filename = attachment.split("\\")[-1]
@@ -42,11 +45,11 @@ def sendMail(toaddr,attachments):
 
     s.quit()
 
-    # shutil.rmtree("temp")
-    # os.mkdir("temp")
+    for attachment in attachments:
+        os.remove("temp/"+attachment)
+
     print("====================================================================")
     print("====================================================================")
     print("Mail sent")
     print("====================================================================")
     print("====================================================================")
-    return True

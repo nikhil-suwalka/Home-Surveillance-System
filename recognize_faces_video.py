@@ -30,6 +30,11 @@ def imageSavefromFrame(arr):
     print(arr[1])
     return arr[1]
 
+prevSentMailTime = -5
+def getPrevSentTime(toaddr,tempImages):
+    global prevSentMailTime
+    print("Called mailing===============================================================================================")
+    sendMail(toaddr,tempImages)
 
 args = {'encodings': 'encodings.pickle', 'output': None, 'display': 1, 'detection_method': 'cnn'}
 
@@ -40,7 +45,7 @@ data = pickle.loads(open(args["encodings"], "rb").read())
 # initialize the video stream and pointer to output video file, then
 # allow the camera sensor to warm up
 print("[INFO] starting video stream...")
-vs = VideoStream(src=1).start()
+vs = VideoStream(src=0).start()
 
 found = False
 unknownFaces = 0
@@ -49,6 +54,8 @@ counter = 0
 p = None
 detectedKnownFace = 0
 # loop over frames from the video file stream
+
+
 
 images_to_save = []
 while True:
@@ -74,12 +81,14 @@ while True:
 
 
     found = False
+    pushedInImage_tosave = False
     for encoding in encodings:
         now = datetime.now()
 
         if (now.second % 5 == 0):
             date_time = "temp\\" + now.strftime("%d-%m-%Y_%H-%M-%S.%f") + ".png"
             images_to_save.append([rgb, date_time])
+            pushedInImage_tosave=True
         # attempt to match each face in the input image to our known
         # encodings
 
@@ -88,7 +97,6 @@ while True:
 
         # check to see if we have found a match
         if True in matches:
-
             # find the indexes of all matched faces then initialize a
             # dictionary to count the total number of times each face
             # was matched
@@ -111,6 +119,9 @@ while True:
                 name = max(counts, key=counts.get)
                 if (len(encodings) == 1 and counts[max(counts, key=counts.get)] >= round(data["names"].count(name)*0.80)):
                     detectedKnownFace += 1
+                    if pushedInImage_tosave:
+                        images_to_save.pop()
+                        pushedInImage_tosave=False
                     if (detectedKnownFace >= 5):
                         # writing detected names into log file
                         try:
@@ -171,8 +182,8 @@ while True:
 
     if (not found):
         counter += 1
-        if (counter > 30):
-            if(unknownFaces+knownFaces>0 and (unknownFaces/(unknownFaces+knownFaces))*100>80):
+        if (counter > 15):
+            if(unknownFaces+knownFaces>0 and (unknownFaces/(unknownFaces+knownFaces))*100>90):
                 # writing detected names into log file
                 try:
                     open("detectionlog.txt", "r").close()
@@ -190,16 +201,18 @@ while True:
                 logfileW.close()
 
             tempImages = os.listdir("temp")
-            if __name__ == '__main__':
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    results = executor.map(imageSavefromFrame, images_to_save)
-                    results1 = executor.map(sendMail, ["suwalka18@gmail.com",tempImages])
-                    # threading.Thread(target=sendMail,args=["suwalka18@gmail.com",tempImages]).start()
-
+            print(prevSentMailTime,int(datetime.now().strftime("%H%M")))
+            if((prevSentMailTime+5)<=int(datetime.now().strftime("%H%M"))):
+                if __name__ == '__main__':
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        results = executor.map(imageSavefromFrame, images_to_save)
+                threading.Thread(target=getPrevSentTime,args=("nishit.shanbhag@gmail.com",tempImages)).start()
+                prevSentMailTime = int(datetime.now().strftime("%H%M"))
+                images_to_save.clear()
             unknownFaces = 0
             knownFaces = 0
 
-            images_to_save.clear()
+
             counter = 0
 
     print("(",unknownFaces, knownFaces,")")
