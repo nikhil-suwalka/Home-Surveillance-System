@@ -122,7 +122,7 @@ while True:
                     if pushedInImage_tosave:
                         images_to_save.pop()
                         pushedInImage_tosave=False
-                    if (detectedKnownFace >= 5):
+                    if (detectedKnownFace >= 10):
                         # writing detected names into log file
                         try:
                             open("detectionlog.txt", "r").close()
