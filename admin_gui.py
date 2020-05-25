@@ -228,6 +228,19 @@ class Toplevel1:
         self.btn_personRegister.configure(pady="0")
         self.btn_personRegister.configure(text='''Register''')
 
+        self.btn_datasetRefresh = tk.Button(self.frame_register,command=self.refreshDataset)
+        self.btn_datasetRefresh.place(relx=0.1, rely=0.8, height=24
+                                      , width=87)
+        self.btn_datasetRefresh.configure(activebackground="#ececec")
+        self.btn_datasetRefresh.configure(activeforeground="#000000")
+        self.btn_datasetRefresh.configure(background="#b3b3d9")
+        self.btn_datasetRefresh.configure(disabledforeground="#a3a3a3")
+        self.btn_datasetRefresh.configure(foreground="#000000")
+        self.btn_datasetRefresh.configure(highlightbackground="#d9d9d9")
+        self.btn_datasetRefresh.configure(highlightcolor="black")
+        self.btn_datasetRefresh.configure(pady="0")
+        self.btn_datasetRefresh.configure(text='''Dataset refresh''')
+
         self.Label2 = tk.Label(self.frame_register)
         self.Label2.place(relx=0.27, rely=0.018, height=21, width=34)
         self.Label2.configure(activebackground="#f9f9f9")
@@ -484,6 +497,14 @@ class Toplevel1:
             os.rmdir("dataset/"+self.textbox_fname.get()+"_"+self.textbox_lname.get())
         self.btn_takePhoto.configure(state='disabled')
 
+    def refreshDataset(self):
+        if os.path.exists("encodings.pickle"):
+            os.remove("encodings.pickle")
+        open("images.txt",'w').close()
+        waitMessageBox = messagebox.askokcancel("Refreshing Dataset","Please wait patiently, this may take 2-20 mins depending on the computer!")
+        if(waitMessageBox):
+            os.system("encode_faces.py")
+            messagebox.showinfo(title="Refreshing Dataset", message="Dataset is refreshed, please press ok to continue! ")
 
 # The following code is added to facilitate the Scrolled widgets you specified.
 class AutoScroll(object):
