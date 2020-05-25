@@ -450,17 +450,22 @@ class Toplevel1:
         filepath = filedialog.askopenfilename(filetypes=[("Image File", '.jpg'),("Image File", '.png'),("Image File", '.jpeg')])
         shutil.copy(filepath,"dataset/"+self.listbox_PersonList.get(tk.ACTIVE))
         self.getPicsByDirName()
+        messagebox.showinfo(title="Refreshing Dataset", message="Adding photo to dataset, this may take 2-10mins depending on the computer.\n Please do not quit the application!")
+        os.system("encode_faces.py")
+        messagebox.showinfo(title="Refreshing Dataset", message="Dataset is refreshed, please press ok to continue! ")
 
     def deletePhoto(self):
         if(messagebox.askokcancel("Delete photo","Are you sure you want to delete this photo?\n"+self.listbox_photoList.get(tk.ACTIVE))):
             os.remove('dataset/'+self.listbox_PersonList.get(tk.ACTIVE)+"/"+self.listbox_photoList.get(tk.ACTIVE))
             self.getPicsByDirName()
+            messagebox.showinfo(title="photo Deleted", message="Dataset is needs to be refreshed to apply the changes.")
 
     def deleteUser(self):
         if (messagebox.askokcancel("Delete photo","Are you sure you want to delete this user?\n" + self.listbox_PersonList.get(tk.ACTIVE))):
             shutil.rmtree('dataset/'+self.listbox_PersonList.get(tk.ACTIVE))
             self.listbox_photoList.delete(0,tk.END)
             self.show_managePanel()
+            messagebox.showinfo(title="User Deleted", message="Dataset is needs to be refreshed to apply the changes.")
 
     def getAllAuthorizedNames(self):
         return os.listdir("dataset")
@@ -493,6 +498,9 @@ class Toplevel1:
                 self.btn_takePhoto.configure(text=str(i+1)+"/"+str(count))
                 self.btn_takePhoto.update()
             self.btn_takePhoto.configure(text="Take Photos")
+            messagebox.showinfo(title="Refreshing Dataset", message="Adding person to dataset, this may take 2-10mins depending on the computer.\n Please do not quit the application!")
+            os.system("encode_faces.py")
+            messagebox.showinfo(title="Refreshing Dataset", message="Dataset is refreshed, please press ok to continue! ")
         else:
             os.rmdir("dataset/"+self.textbox_fname.get()+"_"+self.textbox_lname.get())
         self.btn_takePhoto.configure(state='disabled')
@@ -501,7 +509,7 @@ class Toplevel1:
         if os.path.exists("encodings.pickle"):
             os.remove("encodings.pickle")
         open("images.txt",'w').close()
-        waitMessageBox = messagebox.askokcancel("Refreshing Dataset","Please wait patiently, this may take 2-20 mins depending on the computer!")
+        waitMessageBox = messagebox.askokcancel("Refreshing Dataset","Please wait patiently, this may take 2-20 mins depending on the computer.\n Please do not quit the application!")
         if(waitMessageBox):
             os.system("encode_faces.py")
             messagebox.showinfo(title="Refreshing Dataset", message="Dataset is refreshed, please press ok to continue! ")
