@@ -4,25 +4,24 @@
 
 # import the necessary packages
 import concurrent.futures
-import os
 import json
+import os
+import pickle
+import threading
+from datetime import datetime
 
+import cv2
+import face_recognition
+from PIL import Image
+from imutils.video import VideoStream
 
 from alertMail import sendMail
 
-from PIL import Image
-from imutils.video import VideoStream
-import face_recognition
-import pickle
-from datetime import datetime
-import cv2
-import shutil
-import threading
 
 # def imageSavefromFrame(rgb, date_time):
 def imageSavefromFrame(arr):
     # print("Task 1 assigned to thread: {}".format(threading.current_thread().name))
-    cv2.imwrite(arr[1],arr[0])
+    cv2.imwrite(arr[1], arr[0])
     image = Image.open(arr[1])
     # .rotate(270, expand=True)
     image.thumbnail((600, 468), Image.ANTIALIAS)
@@ -30,11 +29,8 @@ def imageSavefromFrame(arr):
     print(arr[1])
     return arr[1]
 
+
 prevSentMailTime = -5
-def getPrevSentTime(*tempImages):
-    global prevSentMailTime
-    print("Called mailing===============================================================================================")
-    sendMail(tempImages)
 
 args = {'encodings': 'encodings.pickle', 'output': None, 'display': 1, 'detection_method': 'cnn'}
 
@@ -54,7 +50,6 @@ counter = 0
 p = None
 detectedKnownFace = 0
 # loop over frames from the video file stream
-
 
 
 images_to_save = []
@@ -79,7 +74,6 @@ while True:
 
     # loop over the facial embeddings
 
-
     found = False
     pushedInImage_tosave = False
     for encoding in encodings:
@@ -88,7 +82,7 @@ while True:
         if (now.second % 5 == 0):
             date_time = "temp\\" + now.strftime("%d-%m-%Y_%H-%M-%S.%f") + ".png"
             images_to_save.append([rgb, date_time])
-            pushedInImage_tosave=True
+            pushedInImage_tosave = True
         # attempt to match each face in the input image to our known
         # encodings
 
@@ -108,7 +102,8 @@ while True:
             for i in matchedIdxs:
                 name = data["names"][i]
                 counts[name] = counts.get(name, 0) + 1
-            print("Face detected: ", len(encodings),"Total images matched: ",counts[max(counts, key=counts.get)],end=" ")
+            print("Face detected: ", len(encodings), "Total images matched: ", counts[max(counts, key=counts.get)],
+                  end=" ")
             # determine the recognized face with the largest number
             # of votes (note: in the event of an unlikely tie Python
             # will select first entry in the dictionary)
@@ -117,11 +112,12 @@ while True:
             if (counts[max(counts, key=counts.get)] >= threshold):
                 found = True
                 name = max(counts, key=counts.get)
-                if (len(encodings) == 1 and counts[max(counts, key=counts.get)] >= round(data["names"].count(name)*0.80)):
+                if (len(encodings) == 1 and counts[max(counts, key=counts.get)] >= round(
+                        data["names"].count(name) * 0.80)):
                     detectedKnownFace += 1
                     if pushedInImage_tosave:
                         images_to_save.pop()
-                        pushedInImage_tosave=False
+                        pushedInImage_tosave = False
                     if (detectedKnownFace >= 10):
                         # writing detected names into log file
                         try:
@@ -135,7 +131,7 @@ while True:
 
                         logfileW = open("detectionlog.txt", "w")
                         time = datetime.now().strftime('[%d-%m-%Y %H:%M:%S]')
-                        logdata = (time + " Detected "+name+"\n") + logdata
+                        logdata = (time + " Detected " + name + "\n") + logdata
                         logfileW.write(logdata)
                         logfileW.close()
 
@@ -152,10 +148,10 @@ while True:
                                 arg = [rgb, "dataset\\" + name + "\\" + now.strftime("%d-%m-%Y_%H-%M-%S.%f") + ".png"]
                                 threading.Thread(target=imageSavefromFrame, args=[arg]).start()
                                 # os.system("encode_faces.py")
-                                t = threading.Thread(target=os.system, args=["compress_image.py --img "+arg[1]])
+                                t = threading.Thread(target=os.system, args=["compress_image.py --img " + arg[1]])
                                 t.start()
                                 t.join()
-                                threading.Thread(target=os.system, args = ["encode_faces.py"]).start()
+                                threading.Thread(target=os.system, args=["encode_faces.py"]).start()
                         else:
                             json_array[name] = now.strftime("%d-%m-%Y")
                             arg = [rgb, "dataset\\" + name + "\\" + now.strftime("%d-%m-%Y_%H-%M-%S.%f") + ".png"]
@@ -183,7 +179,7 @@ while True:
     if (not found):
         counter += 1
         if (counter > 15):
-            if(unknownFaces+knownFaces>0 and (unknownFaces/(unknownFaces+knownFaces))*100>90):
+            if (unknownFaces + knownFaces > 0 and (unknownFaces / (unknownFaces + knownFaces)) * 100 > 90):
                 # writing detected names into log file
                 try:
                     open("detectionlog.txt", "r").close()
@@ -196,18 +192,20 @@ while True:
 
                 logfileW = open("detectionlog.txt", "w")
                 time = datetime.now().strftime('[%d-%m-%Y %H:%M:%S]')
-                logdata = (time+" Detected unknown person\n") + logdata
+                logdata = (time + " Detected unknown person\n") + logdata
                 logfileW.write(logdata)
                 logfileW.close()
 
             tempImages = os.listdir("temp")
-            print(prevSentMailTime,int(datetime.now().strftime("%H%M")))
-            if((prevSentMailTime+5)<=int(datetime.now().strftime("%H%M"))):
+            print(prevSentMailTime, int(datetime.now().strftime("%H%M")))
+            if ((prevSentMailTime + 5) <= int(datetime.now().strftime("%H%M"))):
                 if __name__ == '__main__':
                     with concurrent.futures.ThreadPoolExecutor() as executor:
                         results = executor.map(imageSavefromFrame, images_to_save)
                 if os.path.exists("owner_email.txt"):
-                    threading.Thread(target=getPrevSentTime,args=tempImages).start()
+                    print("===========================Called mailing=====================")
+                    threading.Thread(target=sendMail, args=[tempImages]).start()
+
                     prevSentMailTime = int(datetime.now().strftime("%H%M"))
                     images_to_save.clear()
                 else:
@@ -215,10 +213,9 @@ while True:
             unknownFaces = 0
             knownFaces = 0
 
-
             counter = 0
 
-    print("(",unknownFaces, knownFaces,")")
+    print("(", unknownFaces, knownFaces, ")")
 
     # loop over the recognized faces
     for ((top, right, bottom, left), name) in zip(boxes, names):
