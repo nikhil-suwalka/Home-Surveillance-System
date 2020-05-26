@@ -531,7 +531,10 @@ class Toplevel1:
 
     def addNewPhoto(self):
         filepath = filedialog.askopenfilename(filetypes=[("Image File", '.jpg'),("Image File", '.png'),("Image File", '.jpeg')])
-        shutil.copy(filepath,"dataset/"+self.listbox_PersonList.get(tk.ACTIVE))
+        try:
+            shutil.copy(filepath,"dataset/"+self.listbox_PersonList.get(tk.ACTIVE))
+        except(Exception):
+            return
         self.getPicsByDirName()
         messagebox.showinfo(title="Refreshing Dataset", message="Adding photo to dataset, this may take 2-10mins depending on the computer.\n Please do not quit the application!")
         os.system("encode_faces.py")
@@ -561,9 +564,16 @@ class Toplevel1:
             self.listbox_photoList.insert(i,photo_name[i])
 
     def addNewAuthorized(self):
-        name = self.textbox_fname.get()+"_"+self.textbox_lname.get()
-        os.mkdir("dataset/" + name)
-        self.btn_takePhoto.configure(state="normal")
+        if(self.textbox_fname.get()!="" and self.textbox_lname.get()!=""):
+            name = self.textbox_fname.get()+"_"+self.textbox_lname.get()
+            try:
+                os.mkdir("dataset/" + name)
+            except(Exception):
+                messagebox.showerror(title="User creation",message="User "+name+" already exists!")
+                return
+            self.btn_takePhoto.configure(state="normal")
+        else:
+            messagebox.showerror(title="User creation",message="First name or Last name cant be empty, Please try again!")
 
     def displayPhoto(self,evt):
         os.system('start dataset/'+self.listbox_PersonList.get(tk.ACTIVE)+"/"+self.listbox_photoList.get(tk.ACTIVE))
@@ -573,7 +583,11 @@ class Toplevel1:
             cam = Device()
             count = 50
             if(self.textbox_photoCount.get()!=""):
-                count = int(self.textbox_photoCount.get())
+                try:
+                    count = int(self.textbox_photoCount.get())
+                except(Exception):
+                    messagebox.showerror(title="Taking Photo",message="Photo count only excepts numbers(0-9), Please try again!")
+                    return
             for i in range(count):
                 cam.saveSnapshot('dataset/'+self.textbox_fname.get()+"_"+self.textbox_lname.get()+"/" + str(i) + ".jpg")
                 sleep(0.1)
@@ -599,17 +613,21 @@ class Toplevel1:
 
     def addOwner2TxtFile(self):
         emailId = self.textbox_addOwner.get()
-        mailIdFile = open("owner_email.txt",'a')
-        mailIdFile.write(emailId+"\n")
-        mailIdFile.close()
 
-        #refresh
-        self.listbox_OwnerList.delete(0,tk.END)
-        mailIdFile = open("owner_email.txt",'r')
-        mailIds = mailIdFile.readlines()
-        for i in range(len(mailIds)):
-            self.listbox_OwnerList.insert(i,mailIds[i])
-        mailIdFile.close()
+        if emailId != "":
+            mailIdFile = open("owner_email.txt",'a')
+            mailIdFile.write(emailId+"\n")
+            mailIdFile.close()
+
+            #refresh
+            self.listbox_OwnerList.delete(0,tk.END)
+            mailIdFile = open("owner_email.txt",'r')
+            mailIds = mailIdFile.readlines()
+            for i in range(len(mailIds)):
+                self.listbox_OwnerList.insert(i,mailIds[i])
+            mailIdFile.close()
+        else:
+            messagebox.showerror(title="Recipient List",message="Blank email id cannot be added, Please try again!")
 
     def delOwnerFromTxtFile(self):
         delId = self.listbox_OwnerList.get(tk.ACTIVE)

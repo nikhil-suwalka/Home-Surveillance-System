@@ -13,14 +13,16 @@ def sendMail(attachments):
 
     emailIdFile = open("owner_email.txt",'r')
     toaddr = emailIdFile.readlines()
+    emailIdFile.close()
+    toaddr = (",".join(toaddr)).replace("\n", "")
 
     print(toaddr,attachments)
     fromaddr = "noreply.homesurveillance@gmail.com"
 
     msg = MIMEMultipart()
     msg['From'] = fromaddr
-    msg['To'] = ",".join(toaddr)
-    msg['Subject'] = "[HomeSurveillance] Unknown Person Detected"
+    msg['To'] = toaddr
+    msg['Subject'] = "(HomeSurveillance) Unknown Person Detected"
     body = "Unknown person detected in premises at "+datetime.now().strftime("%d-%m-%Y %H:%M:%S")+"\n Please find attached images of the person."
 
     msg.attach(MIMEText(body, 'plain'))

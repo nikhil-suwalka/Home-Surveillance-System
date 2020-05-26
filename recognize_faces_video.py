@@ -22,7 +22,7 @@ import threading
 # def imageSavefromFrame(rgb, date_time):
 def imageSavefromFrame(arr):
     # print("Task 1 assigned to thread: {}".format(threading.current_thread().name))
-    cv2.imwrite(arr[1], arr[0])
+    cv2.imwrite(arr[1],arr[0])
     image = Image.open(arr[1])
     # .rotate(270, expand=True)
     image.thumbnail((600, 468), Image.ANTIALIAS)
