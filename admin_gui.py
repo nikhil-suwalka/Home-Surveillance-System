@@ -35,6 +35,7 @@ import gui_support
 
 print(os.getcwd())
 
+
 def vp_start_gui():
     '''Starting point when module is the main routine.'''
     global val, w, root

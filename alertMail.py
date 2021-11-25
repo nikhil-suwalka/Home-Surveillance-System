@@ -8,31 +8,30 @@ from email.mime.base import MIMEBase
 from email import encoders
 
 
-
 def sendMail(attachments):
-
-    emailIdFile = open("owner_email.txt",'r')
+    emailIdFile = open("owner_email.txt", 'r')
     toaddr = emailIdFile.readlines()
     emailIdFile.close()
     toaddr = (",".join(toaddr)).replace("\n", "")
 
-    print(toaddr,attachments)
+    print(toaddr, attachments)
     fromaddr = "noreply.homesurveillance@gmail.com"
 
     msg = MIMEMultipart()
     msg['From'] = fromaddr
     msg['To'] = toaddr
     msg['Subject'] = "(HomeSurveillance) Unknown Person Detected"
-    body = "Unknown person detected in premises at "+datetime.now().strftime("%d-%m-%Y %H:%M:%S")+"\n Please find attached images of the person."
+    body = "Unknown person detected in premises at " + datetime.now().strftime(
+        "%d-%m-%Y %H:%M:%S") + "\n Please find attached images of the person."
 
     msg.attach(MIMEText(body, 'plain'))
 
-    while(len(attachments)==0):
+    while (len(attachments) == 0):
         attachments = os.listdir("temp")
 
     for attachment in attachments:
         filename = attachment.split("\\")[-1]
-        attachment = open("temp/"+attachment, "rb")
+        attachment = open("temp/" + attachment, "rb")
         p = MIMEBase('application', 'octet-stream')
         p.set_payload((attachment).read())
         encoders.encode_base64(p)
@@ -52,7 +51,7 @@ def sendMail(attachments):
     s.quit()
 
     for attachment in attachments:
-        os.remove("temp/"+attachment)
+        os.remove("temp/" + attachment)
 
     print("====================================================================")
     print("====================================================================")

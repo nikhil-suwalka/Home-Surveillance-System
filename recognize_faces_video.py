@@ -227,7 +227,10 @@ while True:
 
             counter = 0
 
-    print("(", unknownFaces, knownFaces, ")")
+
+    cameraCommunicator.changeMessage(msg)
+
+    # print("(", unknownFaces, knownFaces, ")")
 
     # loop over the recognized faces
     for ((top, right, bottom, left), name) in zip(boxes, names):
