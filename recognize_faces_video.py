@@ -15,7 +15,11 @@ import face_recognition
 from PIL import Image
 from imutils.video import VideoStream
 
+from CameraCommunication import CameraCommunication
 from alertMail import sendMail
+
+#DCCC
+cameraCommunicator = CameraCommunication()
 
 
 # def imageSavefromFrame(rgb, date_time):
@@ -72,7 +76,7 @@ while True:
     encodings = face_recognition.face_encodings(rgb, boxes)
     names = []
 
-    # loop over the facial embeddings
+
 
     found = False
     pushedInImage_tosave = False
@@ -102,13 +106,13 @@ while True:
             for i in matchedIdxs:
                 name = data["names"][i]
                 counts[name] = counts.get(name, 0) + 1
-            print("Face detected: ", len(encodings), "Total images matched: ", counts[max(counts, key=counts.get)],
-                  end=" ")
+            # print("Face detected: ", len(encodings), "Total images matched: ", counts[max(counts, key=counts.get)],
+            #       end=" ")
             # determine the recognized face with the largest number
             # of votes (note: in the event of an unlikely tie Python
             # will select first entry in the dictionary)
             threshold = round(data["names"].count(name) * 0.80)
-            print(threshold)
+            # print(threshold)
             if (counts[max(counts, key=counts.get)] >= threshold):
                 found = True
                 name = max(counts, key=counts.get)
@@ -175,12 +179,20 @@ while True:
                 counter = 0
 
         names.append(name)
+    msg = ""
+    if not names:
+        msg = "No one is being detected"
+    elif names.count("Unknown") != len(names):
+       msg = ", ".join(names) + " are detected"
+
+
 
     if (not found):
         counter += 1
         if (counter > 15):
             if (unknownFaces + knownFaces > 0 and (unknownFaces / (unknownFaces + knownFaces)) * 100 > 90):
                 # writing detected names into log file
+                msg = "Unknown person detected"
                 try:
                     open("detectionlog.txt", "r").close()
                 except:
@@ -197,7 +209,7 @@ while True:
                 logfileW.close()
 
             tempImages = os.listdir("temp")
-            print(prevSentMailTime, int(datetime.now().strftime("%H%M")))
+            # print(prevSentMailTime, int(datetime.now().strftime("%H%M")))
             if ((prevSentMailTime + 5) <= int(datetime.now().strftime("%H%M"))):
                 if __name__ == '__main__':
                     with concurrent.futures.ThreadPoolExecutor() as executor:

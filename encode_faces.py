@@ -4,13 +4,17 @@
 # import the necessary packages
 # import the necessary packages
 import sys
+
 import dlib
+from dlib import cuda
 from imutils import paths
 import face_recognition
 import argparse
 import pickle
 import cv2
 import os
+
+print(dlib.DLIB_USE_CUDA)
 
 # construct the argument parser and par
 # se the arguments
