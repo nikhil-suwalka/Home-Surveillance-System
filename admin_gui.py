@@ -469,8 +469,8 @@ class Toplevel1:
         self.btn_clrLog.configure(pady="0")
         self.btn_clrLog.configure(text='''Clear Log''')
 
-        self.listbox_CameraList = ScrolledListBox(self.frame_detectLog,height=10)
-        self.listbox_CameraList.place(relx=0.71, rely=0.1, relheight=0.83, relwidth=0.28)
+        self.listbox_CameraList = ScrolledListBox(self.frame_detectLog,height=20)
+        self.listbox_CameraList.place(relx=0.52, rely=0.1, relheight=0.83, relwidth=0.46)
         self.listbox_CameraList.configure(background="white")
         self.listbox_CameraList.configure(cursor="xterm")
         self.listbox_CameraList.configure(disabledforeground="#a3a3a3")
