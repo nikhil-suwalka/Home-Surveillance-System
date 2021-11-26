@@ -444,7 +444,7 @@ class Toplevel1:
             self.textbox_facelog.insert(tk.INSERT, entry)
         logfile.close()
         self.textbox_facelog.place(relx=0.0, rely=0.0, relheight=1.0
-                                   , relwidth=0.700)
+                                   , relwidth=0.5)
         self.textbox_facelog.configure(background="white")
         self.textbox_facelog.configure(font="TkTextFont")
         self.textbox_facelog.configure(foreground="black")
@@ -458,7 +458,7 @@ class Toplevel1:
         self.textbox_facelog.configure(state="disabled")
 
         self.btn_clrLog = tk.Button(self.frame_detectLog, command=self.clearlog)
-        self.btn_clrLog.place(relx=0.775, rely=0.018, height=30, width=100)
+        self.btn_clrLog.place(relx=0.68, rely=0.018, height=30, width=100)
         self.btn_clrLog.configure(activebackground="#ececec")
         self.btn_clrLog.configure(activeforeground="#000000")
         self.btn_clrLog.configure(background="#b3b3d9")
