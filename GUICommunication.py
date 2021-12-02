@@ -19,6 +19,7 @@ class GUICommunication:
     def listen(self, c: socket.socket, addr):
         while True:
             msg = str(c.recvmsg(1024)[0].decode())
+            print(msg)
             camera_port = msg.split(": ")[0]
             self.camera_messages[camera_port] = msg.split(": ")[1]
             self.camera_status[camera_port] = time.time()

@@ -6,18 +6,19 @@ import time
 class CameraCommunication:
     def __init__(self):
         self.s = socket.socket()
-        self.port = 50001
+        self.port = 50002
         self.msg = ""
-
+        self.hostname = "192.168.196.172"
         # Get new port number
         try:
             while True:
                 c = socket.socket()
-                c.connect((socket.gethostname(), self.port))
+                c.settimeout(0.5)
+                c.connect((self.hostname, self.port))
                 c.close()
                 self.port += 1
         except Exception as e:
-            pass
+            print(e)
 
         self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.s.bind((socket.gethostname(), self.port))
@@ -44,10 +45,10 @@ class CameraCommunication:
                 gui.send(string.encode())
             except:
                 try:
-                    gui.connect((socket.gethostname(), 50000))
-                except:
-                    pass
-            time.sleep(2)
+                    gui.connect((self.hostname, 50000))
+                except Exception as e:
+                    print(e)
+            time.sleep(0.5)
 
     def changeMessage(self, msg: str):
         self.msg = msg

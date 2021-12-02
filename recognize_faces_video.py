@@ -180,6 +180,7 @@ while True:
 
         names.append(name)
     msg = ""
+    print(names)
     if not names:
         msg = "No one is being detected"
     elif names.count("Unknown") != len(names):
@@ -191,8 +192,8 @@ while True:
         counter += 1
         if (counter > 15):
             if (unknownFaces + knownFaces > 0 and (unknownFaces / (unknownFaces + knownFaces)) * 100 > 90):
-                # writing detected names into log file
                 msg = "Unknown person detected"
+                # writing detected names into log file
                 try:
                     open("detectionlog.txt", "r").close()
                 except:
