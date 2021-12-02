@@ -18,7 +18,7 @@ from imutils.video import VideoStream
 from CameraCommunication import CameraCommunication
 from alertMail import sendMail
 
-#DCCC
+# DCCC
 cameraCommunicator = CameraCommunication()
 
 
@@ -75,8 +75,6 @@ while True:
     boxes = face_recognition.face_locations(rgb, model=args["detection_method"])
     encodings = face_recognition.face_encodings(rgb, boxes)
     names = []
-
-
 
     found = False
     pushedInImage_tosave = False
@@ -182,13 +180,11 @@ while True:
     msg = ""
     print(names)
     if not names:
-        msg = "No one is being detected"
+        msg = "Idle"
     elif names.count("Unknown") != len(names):
-       msg = ", ".join(names) + " are detected"
+        msg = ", ".join(names)
 
-
-
-    if (not found):
+    if not found:
         counter += 1
         if (counter > 15):
             if (unknownFaces + knownFaces > 0 and (unknownFaces / (unknownFaces + knownFaces)) * 100 > 90):
@@ -227,7 +223,6 @@ while True:
             knownFaces = 0
 
             counter = 0
-
 
     cameraCommunicator.changeMessage(msg)
 
